@@ -17,7 +17,7 @@ class GenusController extends Controller
     public function newAction()
     {
         $genus = new Genus();
-        $genus->setName('Octopus'.rand(1,100));
+        $genus->setName('Octopus'.rand(1, 100));
         $genus->setSubFamily('Octopodinae');
         $genus->setSpeciesCount(rand(100, 99999));
 
@@ -25,20 +25,22 @@ class GenusController extends Controller
         $em->persist($genus);
         $em->flush();
 
-
-        return new Response('<html><body>Genus created</body></html>');
+        return new Response('<html><body>Genus created!</body></html>');
     }
 
     /**
-     * @Route("/genus/")
+     * @Route("/genus")
      */
     public function listAction()
     {
         $em = $this->getDoctrine()->getManager();
-        $genuses = $em->getRepository('AppBundle:Genus')
-            ->findAll();
 
-        return $this->render('genus/list.html.twig',compact('genuses'));
+        $genuses = $em->getRepository('AppBundle:Genus')
+            ->findAllPublishedOrderedBySize();
+
+        return $this->render('genus/list.html.twig', [
+            'genuses' => $genuses
+        ]);
     }
 
     /**
@@ -47,14 +49,16 @@ class GenusController extends Controller
     public function showAction($genusName)
     {
         $em = $this->getDoctrine()->getManager();
+
         $genus = $em->getRepository('AppBundle:Genus')
-            ->findOneBy(['name'=>$genusName]);
+            ->findOneBy(['name' => $genusName]);
 
         if (!$genus) {
-            throw $this->createNotFoundException();
+            throw $this->createNotFoundException('genus not found');
         }
 
-            /*
+        // todo - add the caching back later
+        /*
         $cache = $this->get('doctrine_cache.providers.my_markdown_cache');
         $key = md5($funFact);
         if ($cache->contains($key)) {
@@ -64,7 +68,8 @@ class GenusController extends Controller
             $funFact = $this->get('markdown.parser')
                 ->transform($funFact);
             $cache->save($key, $funFact);
-        }*/
+        }
+        */
 
         $this->get('logger')
             ->info('Showing genus: '.$genusName);
